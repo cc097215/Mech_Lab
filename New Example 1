@@ -1,0 +1,51 @@
+
+#define IRPin A0    //connection that is analog sensor input
+#define LED 13      // onboard LED
+
+void setup() {
+
+  Serial.begin(9600); 
+  pinMode(LED, OUTPUT);
+
+}
+
+void loop() {
+
+  String sbuf;                       //setup string buffer
+  bool belowThreshold;              //true/false for detection
+  float newvalueV = readValue();   //do the sensor read
+
+  ProcessNewRead(newvalueV, sbuf, &belowThreshold);
+  Serial.println(sbuf);
+
+  if(belowThreshold)
+    digitalWrite(LED, HIGH);
+  else
+    digitalWrite(LED, LOW);
+
+}
+
+double readValue(void){
+
+  int a2d = analogRead(IRPin);
+  float sensor_volts = double(a2d); //convert to double
+  sensor_volts *= 5.0/1024;
+
+  return sensor_volts;  
+}
+
+bool ProcessNewRead(float readV, String &sbuf, bool belowThreshold){
+
+  sbuf = "Void";          //Default Message
+  belowThreshold = true; //Default Value
+
+  if(readV < 2.4)
+  {
+    sbuf = "Volts: "+ String(readV);  //Generate message
+    belowThreshold = false;          // set output
+  }
+
+  return belowThreshold;
+
+  
+}
