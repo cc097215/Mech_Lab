@@ -1,0 +1,125 @@
+#define IRPin A0 //Connect w. analog pin
+#define LED 8 //Sets LED pin
+
+//Additional LED Pins
+#define LED1 2
+#define LED2 4
+#define LED3 6
+
+//Speed Definitions
+#define Slow 1
+#define Fast 2
+
+//True/False
+#define True 1
+#define False 2
+
+void setup() {
+  Serial.begin(9600);
+  pinMode(LED, OUTPUT);
+  
+  pinMode(LED1, OUTPUT); //On for no object
+  pinMode(LED2, OUTPUT); //On for an object
+  pinMode(LED3, OUTPUT); //On after object
+}
+
+void loop() {
+
+  float NewRead = ReadValue(); //Read from sensor
+  float Distance = FindDistance(NewRead); //Find distance
+
+  ObjectState(Distance);  //State Machine
+}
+
+double ReadValue() {
+
+  int A2D = analogRead(IRPin);
+  float SensorVolts = double(A2D);  //To double
+  SensorVolts *= 5.0/1024;         // To Volts
+  return SensorVolts;
+}
+
+float FindDistance(int ReadValue){
+  int V;
+  int Distance;
+
+  V = ReadValue; //Sets Volts
+  Distance = pow((V/14.475),(1/-0.8118)); //Sensor Calibration Curve
+  return Distance;
+}
+
+float ObjectState(int Distance){
+
+  static int ContDisplay = False;
+  
+  //Middle Range State
+  if(Distance < 60 && Distance > 30){
+    BlinkSpeed(Slow);
+    
+    digitalWrite(LED1, LOW);
+    digitalWrite(LED2, HIGH);
+    digitalWrite(LED3, LOW);
+  }
+    
+  else if (Distance < 30) {
+    BlinkSpeed(Fast);
+
+    digitalWrite(LED1, LOW);
+    digitalWrite(LED2, HIGH);
+    digitalWrite(LED3, LOW);
+  }
+    
+  else {
+    Serial.println("Nothing"); //Debug print
+    
+    digitalWrite(LED1, HIGH);
+    digitalWrite(LED2, LOW);
+
+    ContDisplay = True;
+  }
+    
+  if (ContDisplay = True){
+    digitalWrite(LED3, HIGH);
+    LED3Display();
+  }
+    
+}
+
+int BlinkSpeed(int Speed){
+
+  static int OldTime = millis();
+  static int NewTime;
+
+  NewTime = millis();
+
+  if(NewTime - OldTime >= 1000){
+    if(Speed = Slow)
+      Blink;
+    else if (Speed = Fast){
+      Blink;
+      Blink;
+    }
+  }
+  
+}
+
+int Blink(){
+  digitalWrite(LED, HIGH);
+    delay(100);
+    digitalWrite(LED, LOW);
+}
+
+int LED3Display(){
+  static int OldTime3 = millis();
+  static int NewTime3;
+  int ContDisplay;
+
+  //Holds Light on for 2 sec
+  if(NewTime3 - OldTime3 > 2000){
+    digitalWrite(LED3, LOW);
+    ContDisplay = False;
+    return ContDisplay;
+  }
+  ContDisplay = True;
+  return ContDisplay ;
+}
