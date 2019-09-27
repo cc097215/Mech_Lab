@@ -1,71 +1,68 @@
-
+#include <math.h>
 #define IRPin A0 //Connect w. analog pin
-#define LED 8 //Sets LED pin
-
+#define LED 13 //Sets LED pin
 //Speed Definitions
 #define Slow 1
 #define Fast 2
-
-
 void setup() {
   Serial.begin(9600);
   pinMode(LED, OUTPUT);
 }
-
 void loop() {
-
   float NewRead = ReadValue(); //Read from sensor
   float Distance = FindDistance(NewRead); //Find distance
-
   ObjectState(Distance);  //State Machine
 }
-
-double ReadValue() {
-
+float ReadValue() {
+  //Referenced from Wilhem's Practice Code
   int A2D = analogRead(IRPin);
   float SensorVolts = double(A2D);  //To double
   SensorVolts *= 5.0/1024;         // To Volts
+  /*Serial.print("Read: ");
+  Serial.println(SensorVolts);*/
   return SensorVolts;
 }
-
-float FindDistance(int ReadValue){
-  int V;
+float FindDistance(float ReadValue){
+  float V;
   int Distance;
-
   V = ReadValue; //Sets Volts
-  Distance = pow((V/14.475),1/-0.8118); //Sensor Calibration Curve
+  Distance = pow((V/14.475),(1/-0.8118)); //Sensor Calibration Curve
+  Serial.print("Distance: ");
+  Serial.println(Distance);
   return Distance;
 }
 
 float ObjectState(int Distance){
-  
   //Middle Range State
-  if(Distance < 60 && Distance > 30)
+  if(Distance <= 60 && Distance > 30) {
+    //Serial.println("Far Detected");
     BlinkSpeed(Slow);
-    
-  else if (Distance < 30)
+  }
+  else if (Distance <= 30) {
+    //Serial.println("Close Detected");
     BlinkSpeed(Fast);
-    
-  else
-    Serial.println("Nothing"); //Debug print
+  }
 }
-
 int BlinkSpeed(int Speed){
-
   static int OldTime = millis();
   static int NewTime;
-
   NewTime = millis();
-
-  if(NewTime - OldTime >= 1000){
-    if(Speed = Slow)
-      Blink;
-    else if (Speed = Fast){
-      Blink;
-      Blink;
+  int TimeE = (NewTime - OldTime);
+  if(TimeE >= 1000){
+    OldTime = NewTime;
+    //Serial.println(TimeE);
+    if(Speed == Slow){
+      //Serial.println("Slow Blink");
+      Blink();
+    }
+    else if (Speed == Fast){
+      //Serial.println("Fast Blink 1");
+      Blink();
+      delay(200);
+      //Serial.println("Fast Blink 2");
+      Blink();
     }
   }
-  
 }
 
 int Blink(){
