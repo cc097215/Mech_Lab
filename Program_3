@@ -1,93 +1,78 @@
-#include <math.h>
-#define IRPin A0 //Connect w. analog pin
+#define IRPin A0
 #define LED 13 //Sets LED pin
-//Speed Definitions
-#define Slow 1
-#define Fast 2
-//LED Definitions
-#define LED1 2 // Green
-#define LED2 4 // Blue
+
+#include <math.h>
+
+#define LED1 4 // Green
+#define LED2 2 // Yellow
 #define LED3 6 // Red
+
+#define Off 1
+#define On 2
+
+
+
 
 void setup() {
   Serial.begin(9600);
-  pinMode(LED1, OUTPUT); //On for no object
-  pinMode(LED2, OUTPUT); //On for an object
-  pinMode(LED3, OUTPUT); //On after object
-}
+  Serial.println("IR sensor program");
+  pinMode(LED1, OUTPUT); 
+  pinMode(LED2, OUTPUT); 
+  pinMode(LED3, OUTPUT); 
+  pinMode(IRPin, INPUT); //input from sensor
 
-void loop() {
+}
+void loop() 
+{  
+  static bool WasObject = false;
+  static bool LED3On = false;
+  static bool TimerOn = false;
+
+  //Distance Math
   float NewRead = ReadValue(); //Read from sensor
   float Distance = FindDistance(NewRead); //Find distance
-  ObjectState(Distance);  //State Machine
-}
+     /*Serial.print("Distance: ");
+     Serial.println(Distance);*/
 
-
-float ObjectState(int Distance){
-  static bool StartLED3 = false; //LED3
-  static bool init = false;
-  
-  if(Distance <= 5 ||  Distance >= 80){ //Nothing Detected
-      Serial.println("Nothing"); //Debug
-    digitalWrite(LED1, HIGH);
-    digitalWrite(LED2, LOW);
-    
-    if (StartLED3 == true){ //Start LED3 Display
-        Serial.println("Start LED3 Display"); //Debug
-      init = true; //Start Timer
-      init = LED3Display(init);
-    } 
-    LED3Display(int);
-  }
-
-  else if (Distance >= 5 && Distance <= 80){ //Something Detected
-      Serial.println("Object"); //Debug
-    digitalWrite(LED1, LOW);
-    digitalWrite(LED2, HIGH);
-    digitalWrite(LED3, LOW);
-    StartLED3 = true; //Primes LED3 Display
-  }
-}
-
-int LED3Display(bool init){
-  int Time = millis();
-  static int Timeout = 0;
-  
-  if (init == true){ //Sets Timeout
-      Serial.println("Set Timeout"); //Debug
-    Timeout = Time + 2000;
+//Decide LED1 & LED2
+  if (Distance > 5 && Distance <= 25) {
+    Object(); //LED1 & LED2
+    WasObject = true;
+    //Serial.println("Current: On");
+    //Serial.print(Distance);
     digitalWrite(LED3, HIGH);
-    init = false;
   }
-  else if (Time > Timeout && Timeout != 0) { //Turns off LED
-      Serial.println("Turn off LED3"); //Debug
-    digitalWrite(LED3, LOW);
-    Timeout = 0;
+  else {
+    NoObject(); //LED1 & LED2
+    if (WasObject == true){ //Start timer
+      //Serial.println("Timer Start");
+      timer();
+    }
   }
-  else { //Debug
-    Serial.print("Current Time: ");
-    Serial.println(Time);
-  }
-  return init;
+
+  
 }
 
-
-float ReadValue() {
-  //Referenced from Wilhem's Practice Code
-  int A2D = analogRead(IRPin);
-  float SensorVolts = double(A2D);  //To double
-  SensorVolts *= 5.0/1024;         // To Volts
-  /*Serial.print("Read: ");
-  Serial.println(SensorVolts);*/
-  return SensorVolts;
+bool timer(){
+  static bool NewStart = true;
+  int CurrentTime = millis();
+  static int StopTime = 0;
+  
+  Serial.print("Current Time:");
+  Serial.println(CurrentTime);
+  
+  if (NewStart == true){
+    StopTime = CurrentTime + 2000;
+    NewStart = false;
+    Serial.print("Current Time Stop:");
+    Serial.println(StopTime);
+  }
+  
+  else if(CurrentTime >= StopTime && StopTime != 0){
+    NewStart = true;
+    digitalWrite(LED3, LOW); //Turns off LED3
+    Serial.println("Timer Reset");
+  }
+  
 }
 
-float FindDistance(float ReadValue){
-  float V;
-  int Distance;
-  V = ReadValue; //Sets Volts
-  Distance = pow((V/14.475),(1/-0.8118)); //Sensor Calibration Curve
-  /*Serial.print("Distance: ");
-  Serial.println(Distance);*/
-  return Distance;
-}
