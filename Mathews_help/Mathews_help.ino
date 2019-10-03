@@ -22,7 +22,7 @@ int timeObjectEntered;
 
 void setup() {
   Serial.begin(9600);
-  Serial.println("Mathews IR sensor program");
+  Serial.println("IR sensor program");
 
   pinMode(LED1, OUTPUT); //On for no object
   pinMode(LED2, OUTPUT); //On for an object
