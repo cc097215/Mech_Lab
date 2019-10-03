@@ -46,31 +46,31 @@ int states(bool isObject, int previousState)
 {
   int currentState = previousState;
   if(previousState == noObject) {
-    if(isObject) {
-      currentState = objectEntered;
-      timeObjectEntered = millis();
+    if(isObject) {                                        //Object Entering (1)
+      currentState = objectEntered;                     //Light Changes
+      timeObjectEntered = millis();                    //Entering Time Set
     }
-  }
-  else if(previousState == objectEntered) {
-    if(isObject) {
-      if((timeObjectEntered+2000) <= millis()) {
-        currentState = object;
+  } 
+  else if(previousState == objectEntered) {           
+    if(isObject) {                                      //Object Still Here (2)
+      if((timeObjectEntered+2000) <= millis()) {       //Check for Timeout
+        currentState = object;                        //Light Changes
       }
-    }else {
-      currentState = objectLeft;
+    }else {                                           //Object Left  (3)
+      currentState = objectLeft;                     //Light Change
     }
   }
   else if(previousState == object) {
-    if(!isObject) {
+    if(!isObject) {                               //Object Left (4)
       currentState = objectLeft;
     }
   }
-  else if(previousState == objectLeft) {
-    if(!isObject) {
-      if((timeObjectEntered+2000) <= millis()) {
-        currentState = noObject;
+  else if(previousState == objectLeft) {          
+    if(!isObject) {                                 //No Object (5)
+      if((timeObjectEntered+2000) <= millis()) {    //Timer check
+        currentState = noObject;                  
       }
-    } else {
+    } else {                                        //Object Entered (6)
       currentState = object;
     }
   }
