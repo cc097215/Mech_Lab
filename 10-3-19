@@ -1,0 +1,123 @@
+#define IRPin A0
+#define LED 13 //Sets LED pin
+
+//Speed Definitions
+#define Slow 1
+#define Fast 2
+
+#include <math.h>
+
+#define LED1 2 // Green
+#define LED2 4 // Blue
+#define LED3 6 // Red
+
+//True/False
+#define True 1
+#define False 0
+
+#define noObject 0
+#define object 1
+#define objectEntered 2
+#define objectLeft 3
+
+void setup() {
+  Serial.begin(9600);
+  Serial.println("IR sensor program");
+
+  pinMode(LED1, OUTPUT); //On for no object
+  pinMode(LED2, OUTPUT); //On for an object
+  pinMode(LED3, OUTPUT); //On after object
+
+  pinMode(IRPin, INPUT); //input from sensor
+
+}
+
+
+void loop() 
+{
+  int currentState = noObject;
+  float timeObjectEntered;
+  
+  while(1) {
+    float NewRead = map(analogRead(IRPin), 0, 1023, 0, 5);
+    int Distance = pow((NewRead/14.475),(1/-0.8118));
+       
+    bool isObject = (Distance > 5 && Distance <=80);
+   
+    //bool isObject = (NewRead > 2.5);
+  
+    currentState = states(isObject, currentState, timeObjectEntered);
+    updateLeds(currentState);
+    delay(100);
+  }
+ }
+
+int states(bool isObject, int previousState, float &timeObjectEntered)
+{
+  int currentState = previousState;
+  if(previousState == noObject) {
+    if(isObject) {
+      currentState = objectEntered;
+      timeObjectEntered = millis();
+      Serial.print("\nThe time that the object entered was: ");
+      Serial.print(timeObjectEntered);
+      Serial.println("\n");
+    }
+  }
+  else if(previousState == objectEntered) {
+    if(isObject) {
+      Serial.println(millis());
+      if((timeObjectEntered+2000) <= millis()) {
+        currentState = object;
+      }
+    } else {
+      currentState = objectLeft;
+    }
+  }
+  else if(previousState == object) {
+    if(!isObject) {
+      currentState = noObject;
+    }
+  }
+  else if(previousState == objectLeft) {
+    if(!isObject) {
+      Serial.println(millis());
+      if((timeObjectEntered+2000) <= millis()) {
+        currentState = noObject;
+      }
+    } else {
+      currentState = object;
+    }
+  }
+  
+  return currentState;
+}
+
+void updateLeds(int currentState)
+{
+  if (currentState == objectLeft)//Newly  Left
+  {
+  digitalWrite(LED1, HIGH);
+  digitalWrite(LED2, LOW);
+  digitalWrite(LED3, HIGH);
+  }
+  else if (currentState == object)//There
+  {
+  digitalWrite(LED1, LOW);
+  digitalWrite(LED2, HIGH);
+  digitalWrite(LED3, LOW);
+  }
+  
+  else if (currentState == objectEntered)//Newly Entered
+  {
+  digitalWrite(LED1, LOW);
+  digitalWrite(LED2, HIGH);
+  digitalWrite(LED3, HIGH);
+  }
+  else if (currentState == noObject)//gone 
+  {
+  digitalWrite(LED1, HIGH);
+  digitalWrite(LED2, LOW);
+  digitalWrite(LED3, LOW);
+  }
+}
