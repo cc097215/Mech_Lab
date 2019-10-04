@@ -11,8 +11,6 @@
 #define object 1
 #define objectEntered 2
 #define objectLeft 3
-#define objectX2 4
-
 
 
 void setup() {
